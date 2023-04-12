@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import { Container, Table, Row, Col, Button } from "react-bootstrap";
-import pokemon from "./pokemon.json";
-
+import { Container, Table, Row, Col, Button, Stack } from "react-bootstrap";
 const PokemonRow = ({ pokemon, onSelect }) => {
 	// console.log(pokemon);
 	return (
@@ -32,7 +30,7 @@ const PokemonInfo = ({ name, base }) => (
 				<tbody>
 					{Object.keys(base).map((key, idx) => (
 						<>
-							<tr key={idx + key}>
+							<tr key={key}>
 								<td>{key}</td>
 								<td>{base[key]}</td>
 							</tr>
@@ -65,54 +63,75 @@ PokemonInfo.propTypes = {
 };
 function App() {
 	const [filter, setFilter] = useState("");
+	const [pokemon, setPokemon] = useState([]);
 	const [selectedItem, setSelectedItem] = useState(null);
 
+	useEffect(() => {
+		fetch("http://localhost:5173/src/pokemon.json")
+			.then((res) => res.json())
+			.then((data) => setPokemon(data))
+			.catch((e) => {
+				console.log(e);
+				return setPokemon(null);
+			});
+	}, []);
 	return (
 		<>
 			<Container className="my-5">
 				<h1 className="fw-bold text-center">Pokemon Search</h1>
+
 				<input
 					className="form-control"
 					type="text"
 					value={filter}
 					onChange={(e) => setFilter(e.target.value)}
 				/>
-				<Table>
-					<thead>
-						<tr>
-							<th>Name</th>
-							<th>Type</th>
-							<th>Select</th>
-						</tr>
-					</thead>
-					<tbody>
-						{pokemon ? (
-							pokemon
-								.filter((pokemon) =>
-									pokemon.name.english
-										.toLowerCase()
-										.includes(filter.toLowerCase())
-								)
-								.slice(0, 20)
-								.map((pokemon) => (
-									<PokemonRow
-										pokemon={pokemon}
-										onSelect={(pokemon) => setSelectedItem(pokemon)}
-										key={pokemon.id}
-									/>
-								))
+				<Stack direction="horizontal" gap={3}>
+					<div className="container align-self-start">
+						{selectedItem ? (
+							<>
+								<PokemonInfo {...selectedItem} />
+							</>
 						) : (
-							<tr>
-								<td colSpan={2}>Not Found</td>
-							</tr>
+							<>
+								<div></div>
+							</>
 						)}
-					</tbody>
-				</Table>
-				{selectedItem && (
-					<>
-						<PokemonInfo {...selectedItem} />
-					</>
-				)}
+					</div>
+					<Table>
+						<thead>
+							<tr>
+								<th>Name</th>
+								<th>Type</th>
+								<th>Select</th>
+							</tr>
+						</thead>
+						<tbody>
+							{pokemon ? (
+								pokemon
+									.filter((pokemon) =>
+										pokemon.name.english
+											.toLowerCase()
+											.includes(filter.toLowerCase())
+									)
+									.slice(0, 20)
+									.map((pokemon) => (
+										<PokemonRow
+											pokemon={pokemon}
+											onSelect={(pokemon) => setSelectedItem(pokemon)}
+											key={pokemon.id}
+										/>
+									))
+							) : (
+								<tr>
+									<td className="text-center fs-3 fw-bold" colSpan={3}>
+										Not Found
+									</td>
+								</tr>
+							)}
+						</tbody>
+					</Table>
+				</Stack>
 			</Container>
 		</>
 	);
